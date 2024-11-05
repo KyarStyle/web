@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Aquí está tu video!</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f6d365; /* Color de fondo */
+            font-family: Arial, sans-serif;
+        }
+
+        video {
+            max-width: 90%; /* Hace que el video sea responsive */
+            height: auto;
+            border: 2px solid #ff6b81; /* Borde para el video */
+            border-radius: 10px; /* Bordes redondeados */
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <video id="myVideo" controls muted>
+            <source src="nosotros.mp4" type="video/mp4">
+            Tu navegador no soporta el elemento de video.
+        </video>
+    </div>
+    <script>
+        // Esperar a que la página esté completamente cargada
+        window.onload = () => {
+            const video = document.getElementById('myVideo');
+            video.play(); // Iniciar la reproducción del video
+        };
+    </script>
+</body>
+</html>
+
