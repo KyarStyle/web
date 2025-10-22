@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Control Financiero</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(() => console.log('Service Worker registrado ✅'))
+      .catch(err => console.error('Error:', err));
+  }
+</script>
+
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-chart-line"></i>
+            <h2>FinControl</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="#" class="nav-link active" data-section="dashboard">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-link" data-section="ingresos">
+                <i class="fas fa-arrow-up"></i>
+                <span>Ingresos</span>
+            </a>
+            <a href="#" class="nav-link" data-section="egresos">
+                <i class="fas fa-arrow-down"></i>
+                <span>Egresos</span>
+            </a>
+            <a href="#" class="nav-link" data-section="reportes">
+                <i class="fas fa-file-alt"></i>
+                <span>Reportes</span>
+            </a>
+            <a href="#" class="nav-link" data-section="configuracion">
+                <i class="fas fa-cog"></i>
+                <span>Configuración</span>
+            </a>
+        </nav>
+        <div class="theme-toggle">
+            <button id="themeToggle" class="btn-theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <button class="btn-menu" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="header-title">
+                <h1 id="pageTitle">Dashboard</h1>
+            </div>
+            <div class="header-user">
+                <span id="currentDate"></span>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section class="section active" id="dashboard">
+            <!-- Summary Cards -->
+            <div class="cards-grid">
+                <div class="card card-balance">
+                    <div class="card-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Balance Total</h3>
+                        <p class="card-value" id="totalBalance">$0.00</p>
+                    </div>
+                </div>
+                <div class="card card-income">
+                    <div class="card-icon">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Total Ingresos</h3>
+                        <p class="card-value" id="totalIncome">$0.00</p>
+                    </div>
+                </div>
+                <div class="card card-expense">
+                    <div class="card-icon">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Total Egresos</h3>
+                        <p class="card-value" id="totalExpense">$0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-container">
+                <div class="filter-group">
+                    <label for="filterDateFrom">Desde:</label>
+                    <input type="date" id="filterDateFrom" class="input-date">
+                </div>
+                <div class="filter-group">
+                    <label for="filterDateTo">Hasta:</label>
+                    <input type="date" id="filterDateTo" class="input-date">
+                </div>
+                <button class="btn btn-primary" id="applyFilter">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+                <button class="btn btn-secondary" id="clearFilter">
+                    <i class="fas fa-times"></i> Limpiar
+                </button>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>Ingresos vs Egresos</h3>
+                    <canvas id="barChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Distribución</h3>
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="recent-transactions">
+                <h3>Transacciones Recientes</h3>
+                <div id="recentList"></div>
+            </div>
+        </section>
+
+        <!-- Ingresos Section -->
+        <section class="section" id="ingresos">
+            <div class="section-header">
+                <h2>Gestión de Ingresos</h2>
+                <button class="btn btn-success" id="btnNewIncome">
+                    <i class="fas fa-plus"></i> Nuevo Ingreso
+                </button>
+            </div>
+
+            <!-- Income Form -->
+            <div class="form-container" id="incomeFormContainer" style="display: none;">
+                <form id="incomeForm" class="transaction-form">
+                    <h3 id="incomeFormTitle">Agregar Ingreso</h3>
+                    <input type="hidden" id="incomeId">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="incomeDescription">Descripción *</label>
+                            <input type="text" id="incomeDescription" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="incomeAmount">Monto *</label>
+                            <input type="number" id="incomeAmount" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="incomeDate">Fecha *</label>
+                            <input type="date" id="incomeDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="incomeCategory">Categoría *</label>
+                            <select id="incomeCategory" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Salario">Salario</option>
+                                <option value="Ventas">Ventas</option>
+                                <option value="Inversiones">Inversiones</option>
+                                <option value="Bonos">Bonos</option>
+                                <option value="Otros">Otros</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancelIncome">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Income List -->
+            <div class="table-container">
+                <table class="data-table" id="incomeTable">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Descripción</th>
+                            <th>Categoría</th>
+                            <th>Monto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="incomeTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Egresos Section -->
+        <section class="section" id="egresos">
+            <div class="section-header">
+                <h2>Gestión de Egresos</h2>
+                <button class="btn btn-danger" id="btnNewExpense">
+                    <i class="fas fa-plus"></i> Nuevo Egreso
+                </button>
+            </div>
+
+            <!-- Expense Form -->
+            <div class="form-container" id="expenseFormContainer" style="display: none;">
+                <form id="expenseForm" class="transaction-form">
+                    <h3 id="expenseFormTitle">Agregar Egreso</h3>
+                    <input type="hidden" id="expenseId">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="expenseDescription">Descripción *</label>
+                            <input type="text" id="expenseDescription" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="expenseAmount">Monto *</label>
+                            <input type="number" id="expenseAmount" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="expenseDate">Fecha *</label>
+                            <input type="date" id="expenseDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="expenseCategory">Categoría *</label>
+                            <select id="expenseCategory" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Compras">Compras</option>
+                                <option value="Servicios">Servicios</option>
+                                <option value="Salarios">Salarios</option>
+                                <option value="Alquiler">Alquiler</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                                <option value="Otros">Otros</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancelExpense">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Expense List -->
+            <div class="table-container">
+                <table class="data-table" id="expenseTable">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Descripción</th>
+                            <th>Categoría</th>
+                            <th>Monto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenseTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Reportes Section -->
+        <section class="section" id="reportes">
+            <div class="section-header">
+                <h2>Reportes y Análisis</h2>
+            </div>
+
+            <!-- Report Filters -->
+            <div class="report-filters">
+                <div class="form-group">
+                    <label for="reportType">Tipo de Reporte:</label>
+                    <select id="reportType">
+                        <option value="mensual">Mensual</option>
+                        <option value="semanal">Semanal</option>
+                        <option value="categoria">Por Categoría</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reportMonth">Mes:</label>
+                    <input type="month" id="reportMonth">
+                </div>
+                <button class="btn btn-primary" id="generateReport">
+                    <i class="fas fa-chart-bar"></i> Generar Reporte
+                </button>
+            </div>
+
+            <!-- Export Buttons -->
+            <div class="export-buttons">
+                <button class="btn btn-info" id="exportPDF">
+                    <i class="fas fa-file-pdf"></i> Exportar PDF
+                </button>
+                <button class="btn btn-success" id="exportExcel">
+                    <i class="fas fa-file-excel"></i> Exportar Excel
+                </button>
+            </div>
+
+            <!-- Report Summary -->
+            <div class="report-summary" id="reportSummary">
+                <h3>Resumen del Reporte</h3>
+                <div id="reportContent"></div>
+            </div>
+
+            <!-- Report Charts -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>Ingresos por Categoría</h3>
+                    <canvas id="reportIncomeChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Egresos por Categoría</h3>
+                    <canvas id="reportExpenseChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Configuración Section -->
+        <section class="section" id="configuracion">
+            <div class="section-header">
+                <h2>Configuración</h2>
+            </div>
+
+            <div class="config-container">
+                <div class="config-card">
+                    <h3><i class="fas fa-database"></i> Gestión de Datos</h3>
+                    <p>Administra los datos almacenados en el sistema</p>
+                    <div class="config-actions">
+                        <button class="btn btn-warning" id="backupData">
+                            <i class="fas fa-download"></i> Respaldar Datos
+                        </button>
+                        <button class="btn btn-info" id="restoreData">
+                            <i class="fas fa-upload"></i> Restaurar Datos
+                        </button>
+                        <button class="btn btn-danger" id="clearData">
+                            <i class="fas fa-trash"></i> Limpiar Todo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="config-card">
+                    <h3><i class="fas fa-palette"></i> Apariencia</h3>
+                    <p>Personaliza la apariencia del sistema</p>
+                    <div class="config-actions">
+                        <button class="btn btn-primary" id="toggleTheme">
+                            <i class="fas fa-adjust"></i> Cambiar Tema
+                        </button>
+                    </div>
+                </div>
+
+                <div class="config-card">
+                    <h3><i class="fas fa-info-circle"></i> Información</h3>
+                    <p>Sistema de Control Financiero v1.0</p>
+                    <p><small>Desarrollado para gestión de ingresos y egresos</small></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
